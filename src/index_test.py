@@ -66,6 +66,7 @@ for entry in index.entries:
 for i in range(count):
     m = len(index.entries) // 2
     index.delete(index.entries[m].rowids[0], index.entries[m].value)
+print("after delete test")
 
 if len(index.entries) != 0:
     passtest = False

@@ -42,7 +42,7 @@ class Index:
         result = self.search(value)
         ids = self.entries[result].rowids
 
-        if result != 1  and self.entries[result].value == value:
+        if result != -1  and self.entries[result].value == value:
             if len(ids) <= 1:
                 self.entries.remove(self.entries[result])
             else:
