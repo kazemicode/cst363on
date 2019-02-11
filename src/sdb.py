@@ -72,10 +72,10 @@ class BitMap:
             print("Error.  Initializing BitMap requires array of 4096 bytes!")
     
     def __getitem__(self, index):
-        return 0
+        return self.array[index]
     
     def __setitem__(self, index, value):
-        pass
+        self.array[index] = value
         
     def getByteArray(self):
         return self.array

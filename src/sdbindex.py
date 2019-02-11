@@ -39,16 +39,61 @@ class Index:
                 self.insert(rowid, value)
 
     def delete(self, rowid, value):
-        pass
+        result = self.search(value)
+        ids = self.entries[result].rowids
+
+        if result != 1  and self.entries[result].value == value:
+            if len(ids) <= 1:
+                self.entries.remove(self.entries[result])
+            else:
+                for id in ids:
+                    if id == rowid:
+                        ids.remove(id)
+
  
+
     def insert(self, rowid, value):
-        pass
-    
+        entry = IndexEntryNU(value)
+        entry.rowids.append(rowid)
+        result = self.search(value)
+
+
+        if result == -1:
+            self.entries.append(entry)
+
+
+        else:
+            if self.entries[result].value == value:
+                self.entries[result].rowids.append(rowid)
+            else:
+                self.entries.insert(result, entry)
+
+
+
+
     def search(self, value):
         # return index value of first IndexEntry 
         #         where IndexEntry.value >= value
         # return -1 if value is higher than all entries in index
-        return -1
+        start = 0
+        end = len(self.entries) -1
+        while True:
+            if end < start:     # value is greater than all current entries
+                return -1
+
+            mid = (start + end) // 2    # index to check
+
+
+            if self.entries[mid].value < value:     # shift to right
+                start = mid + 1
+
+            elif self.entries[mid].value >= value:
+                if mid < 1 or self.entries[mid-1].value < value:     # found first >= entry
+                    return mid
+                else:                               # shift to left
+                    end = mid - 1
+            else:
+                return mid
             
 class UniqueIndex(Index):
     # this class is code unique to index that does not allow duplicate value entries
@@ -64,8 +109,20 @@ class UniqueIndex(Index):
             print("Index end.")
         
         def insert(self, rowid, value):
-            pass
+            entry = IndexEntryU(value, rowid)
+            result = self.search(value)
+
+            if result == -1:
+                self.entries.append(entry)
+
+            elif self.entries[result].value != value:
+                self.entries.insert(result, entry)
+            else:
+                raise ValueError('Duplicate values not permitted.')
+
     
         def delete(self, rowid, value):
-            pass
+            result = self.search(value)
+            if result != -1:
+                self.entries.pop(result)
         
