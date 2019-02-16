@@ -41,13 +41,15 @@ class SimpleDBV():
         for i in range(len(trnlog)-1, -1, -1): #  traverse backwards
             cr = trnlog[i]
             if cr.rowid == rowid:
+
                 return Row(self.sdb.schema, cr.change)
         # reached only if current trns id not in transactions
         if self.row_versionid[rowid] < version_id:
             return self.sdb.getRow(rowid)
         else:
-            pass
-
+            for record in self.row_history[rowid]:
+                if record.version_id < version_id:
+                    return Row(self.schema, record.change)
 
  
     def insertRow(self, row, version_id):
@@ -79,21 +81,37 @@ class SimpleDBV():
           
     def commit(self, version_id):
         for cr in self.transactions[version_id]:
-            if cr.kind == ChangeRecord.DELETE:
-                self.sdb.deleteRow(cr.rowid)
-            elif cr.kind == ChangeRecord.UPDATE:
-                self.sdb.updateRawRow(cr.rowid, cr.change)
-            elif cr.kind == ChangeRecord.INSERT:
-                self.sdb.insertRawRowId(cr.rowid, cr.change)
-                self.sdb.b1.set(cr.rowid)
+            # Only commit if we will not conflict with a later version
+            if self.row_versionid[cr.rowid] < version_id:
+
+                if cr.kind == ChangeRecord.DELETE:
+                    self.self.sdb.deleteRow(cr.rowid)
+                elif cr.kind == ChangeRecord.UPDATE:
+                    self.sdb.updateRawRow(cr.rowid, cr.change)
+                elif cr.kind == ChangeRecord.INSERT:
+                    self.sdb.insertRawRowId(cr.rowid, cr.change)
+                    self.sdb.b1.set(cr.rowid)
+
+                # use commit_id and add to database's list of row versions
+                # used to prevent dirty reads
+                commit_id = self.getNextId()
+                cr.version_id = commit_id
+                self.row_versionid[cr.rowid] = commit_id
+                # Add to row history
+                if cr.rowid in self.row_history:
+                    self.row_history[cr.rowid].insert(0, cr) # insert at front
+                else:
+                    self.row_history[cr.rowid]= [cr] # create an entry if one doesn't exist
+            else:
+                # rollback if we conflict
+                self.rollback(version_id)
+                return False
+
         return True
 
-        
-    def rollback(self, version_id):      
+    def rollback(self, version_id):
         for cr in self.transactions[version_id]:
             if cr.kind == ChangeRecord.INSERT:
                 self.sdb.b1.unreserve(cr.rowid)
         del self.transactions[version_id]
         return True
-
-        
