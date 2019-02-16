@@ -96,6 +96,15 @@ class BitMap:
         for i in range(4096):
             if self.array[i] == 2:
                 self.array[i] = 0
+
+    def reserve(self, rowid):
+        self.array[rowid] = 2
+
+    def set(self, rowid):
+        self.array[rowid] = 1
+
+    def unreserve(self, rowid):
+        self.array[rowid] = 0
                 
 class SimpleDB:
     def __init__(self, schema):
