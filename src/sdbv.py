@@ -85,7 +85,7 @@ class SimpleDBV():
             if self.row_versionid[cr.rowid] < version_id:
 
                 if cr.kind == ChangeRecord.DELETE:
-                    self.self.sdb.deleteRow(cr.rowid)
+                    self.sdb.deleteRow(cr.rowid)
                 elif cr.kind == ChangeRecord.UPDATE:
                     self.sdb.updateRawRow(cr.rowid, cr.change)
                 elif cr.kind == ChangeRecord.INSERT:
