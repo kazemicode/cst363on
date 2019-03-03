@@ -22,7 +22,7 @@ db.create()
 
 # generate some random data and insert the row into the database
 
-for i in range(50):
+for i in range(4096):
     id = i 
     salary = random.uniform(10000,20000)
     name = 'David S. P'+str(i)

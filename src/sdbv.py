@@ -41,8 +41,10 @@ class SimpleDBV():
         for i in range(len(trnlog)-1, -1, -1): #  traverse backwards
             cr = trnlog[i]
             if cr.rowid == rowid:
-
-                return Row(self.sdb.schema, cr.change)
+                if cr.change == b'':
+                    return False
+                else:
+                    return Row(self.sdb.schema, cr.change)
         # reached only if current trns id not in transactions
         if self.row_versionid[rowid] < version_id:
             return self.sdb.getRow(rowid)

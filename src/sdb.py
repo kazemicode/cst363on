@@ -66,10 +66,11 @@ class Row:
         return r
         
 class BitMap:
-    def __init__(self, barray=bytearray(4096)):
-        self.array = barray
-        if len(self.array) != 4096:
-            print("Error.  Initializing BitMap requires array of 4096 bytes!")
+    def __init__(self, size):
+
+        self.array = bytearray(size)
+       # if len(self.array) != bytearray(size):
+        #    print("Error.  Initializing BitMap requires array of 4096 bytes!")
     
     def __getitem__(self, index):
         return self.array[index]
@@ -81,19 +82,19 @@ class BitMap:
         return self.array
         
     def findSpace(self, start_rowid):
-        for i in range(start_rowid, 4096):
+        for i in range(start_rowid, self.size):
             if self.array[i] == 0:
                 return i
         return -1
         
     def findRow(self, start_rowid):
-        for i in range(start_rowid, 4096):
+        for i in range(start_rowid, self.size):
             if self.array[i] == 1:
                 return i
         return -1
         
     def unreserveAll(self):
-        for i in range(4096):
+        for i in range(self.size):
             if self.array[i] == 2:
                 self.array[i] = 0
 
@@ -110,16 +111,18 @@ class SimpleDB:
     def __init__(self, schema):
         if type(schema) == str:
             self.schema = Schema(schema, [])
+            print(self.schema.rowsize)
             self.b0 = ''        # schema, fill be filled in during __open__()
-            self.b1 = BitMap()  # will be read from file in __open__()
+            self.b1 = BitMap(size)  # will be read from file in __open__()
             self.data = []      # will be read from file in __open__()
             self.indexes = []   # will be created during __createIndexes__()
             self.__open__()
             self.__createIndexes__()
         else:
             self.schema = schema
+            print("hi", self.schema.rowsize)
             self.b0 = ''        # schema, will be filled in during create()
-            self.b1 = BitMap()  # bitmap 
+            self.b1 = BitMap()  # bitmap
             self.data = []      # data blocks, will be filled in during create()
             self.indexes = []     # will be filled in during create()
          
@@ -131,7 +134,8 @@ class SimpleDB:
         self.b0 = bytearray(file.read(4096))
         self.schema.fromString(self.b0.decode('utf-8'))
         self.b1 = BitMap(bytearray(file.read(4096)))
-        rpb = 4096 // self.schema.rowsize  # number of data blocks
+        rpb = 4096 // self.schema.rowsize
+        # number of data blocks
         nd = ceil(4096 / rpb)
         for i in range(nd):
             self.data.append(bytearray(file.read(4096)))
@@ -150,8 +154,13 @@ class SimpleDB:
                 self.indexes.append(index)
             
     def create(self):
+
+        print("rowsize: ", self.schema.rowsize)
         rpb = 4096 // self.schema.rowsize  # rows per block
-        nd = ceil(4096 / rpb)              # number of data blocks to hold 4096 rows
+        print(rpb)
+        nd = ceil(4096 / rpb)  # number of data blocks to hold 4096 rows
+        print(nd)
+
         schemaStr = self.schema.toString()
         if len(schemaStr) > 4096:
             raise Exception("Schema too large."+str(len(schemaStr)))
@@ -186,7 +195,10 @@ class SimpleDB:
         print("number of indexes", len(self.indexes))
         if indexes:
             for index in self.indexes:
-                index.print() 
+                index.print()
+        print("data:")
+        for d in self.data:
+            print(d)
 
 
     def insertRow(self, row):
